@@ -1,0 +1,130 @@
+#include <f401reMap.h>
+
+int D_15 = pinMap(14);
+int D_14 = pinMap(13);
+int D_13 = pinMap(12);
+int D_12 = pinMap(11);
+int D_11 = pinMap(10);
+int D_10 = pinMap(9);
+int D_9 = pinMap(8);
+int D_8 = pinMap(7);
+int D_7 = pinMap(6);
+int D_6 = pinMap(5);
+int D_5 = pinMap(4);
+int D_4 = pinMap(3);
+int D_3 = pinMap(2);
+int D_2 = pinMap(1);
+
+
+
+int PIN;
+int LED_except_7[] = {3, 4, 5, 6};
+int LED_except_6[] = {3, 4, 5, 7};
+int LED_except_5[] = {3, 4, 6, 7};
+int LED_except_4[] = {3, 5, 6, 7};
+int LED_except_3[] = {4, 5, 6, 7};
+int incomingByte = 0;
+int pinCount = 4;
+int timer = 100;
+
+
+#define CMD_UNKNOWN 0
+#define CMD_PING    1
+#define CMD_2_HIGH  2
+#define CMD_3_HIGH  3
+#define CMD_4_HIGH  4
+#define CMD_5_HIGH  5
+#define CMD_6_HIGH  6
+#define CMD_7_HIGH  7
+#define CMD_LED_OFF 8
+#define CMD_MOVE_FRONT 9
+#define CMD_MOVE_REAR 10
+
+
+void setup() {
+  // put your setup code here, to run once:
+  pinMode(D_3, OUTPUT);
+  pinMode(D_4, OUTPUT);
+  pinMode(D_5, OUTPUT);
+  pinMode(D_6, OUTPUT);
+  pinMode(D_7, OUTPUT);
+  pinMode(D_8, INPUT);
+  pinMode(D_9, INPUT);
+  pinMode(D_10, INPUT);
+  pinMode(D_11, INPUT);
+  for (int thisPin = 0; thisPin < pinCount; thisPin++) {
+    pinMode(LED_except_7[thisPin], OUTPUT);
+  }
+  for (int thisPin = 0; thisPin < pinCount; thisPin++) {
+    pinMode(LED_except_6[thisPin], OUTPUT);
+  }
+  for (int thisPin = 0; thisPin < pinCount; thisPin++) {
+    pinMode(LED_except_5[thisPin], OUTPUT);
+  }
+  for (int thisPin = 0; thisPin < pinCount; thisPin++) {
+    pinMode(LED_except_4[thisPin], OUTPUT);
+  }
+  for (int thisPin = 0; thisPin < pinCount; thisPin++) {
+    pinMode(LED_except_3[thisPin], OUTPUT);
+  }
+
+  Serial.begin(9600);
+}
+
+
+
+int parseStringCommand(String stringCommand) {
+      if (stringCommand.equals("3 HIGH")) {
+        return CMD_3_HIGH;
+      } else if (stringCommand.equals("4 HIGH")) {
+        return CMD_4_HIGH;
+      } else if (stringCommand.equals("5 HIGH")) {
+        return CMD_5_HIGH;
+      } else if (stringCommand.equals("6 HIGH")) {
+        return CMD_6_HIGH;
+      } else if (stringCommand.equals("7 HIGH")) {
+        return CMD_7_HIGH;
+      } else {
+        return CMD_UNKNOWN;
+      }
+}
+
+void loop() {
+
+  if (Serial.available() > 0) {
+    String stringCommand = Serial.readStringUntil('\n');
+    int command = parseStringCommand(stringCommand);
+    switch (command){     
+      case CMD_3_HIGH:
+        digitalWrite(D_3, HIGH);
+        Serial.println("D3 is set to HIGH!");
+        for (int thisPin = 0; thisPin < pinCount; thisPin++) {
+          digitalWrite(LED_except_3[thisPin], LOW);
+        break;   
+      }
+      case CMD_4_HIGH:
+          digitalWrite(D_4, HIGH);
+          Serial.println("D4 is set to HIGH!");
+          for (int thisPin = 0; thisPin < pinCount; thisPin++) {
+            digitalWrite(LED_except_4[thisPin], LOW);
+          break;   
+          }  
+      case CMD_5_HIGH:
+          digitalWrite(D_5, HIGH);
+          Serial.println("D5 is set to HIGH!");
+          for (int thisPin = 0; thisPin < pinCount; thisPin++) {
+            digitalWrite(LED_except_5[thisPin], LOW);
+          break;   
+          }
+      case CMD_6_HIGH:
+          digitalWrite(D_6, HIGH);
+          Serial.println("D6 is set to HIGH!");
+          for (int thisPin = 0; thisPin < pinCount; thisPin++) {
+            digitalWrite(LED_except_6[thisPin], LOW);
+          break;   
+          }
+    }
+  }
+}
+        
+ 
