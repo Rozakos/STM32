@@ -1,0 +1,304 @@
+
+//int pinMap[32] = {2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 45, 44, 43, 42, 41, 40};
+
+byte pinMap[32] = {PA_11,PA_10,PA_9,PA_8,PC_9,PC_8,PC_7,PC_6,PB_0,PC_5,PC_4,PA_7,PA_6,PA_5,PB_5,PB_6,PB_15,PB_14,PB_13,PB_12,PB_11,PB_10,PB_2,PB_1};
+ // 1  2  3  4  5  6  7  8  9   10  11  12  13  14  15  16  17  18  19  20  21  22  23  24  25  26  27  28  29  30  31  32  33  34  35  36  37  38  39  40  41  42  43  44
+// {2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 45, 44, 43, 42, 41, 40, 38, 37, 36, 35, 34, 33, 51, 50, 49, 48, 47, 46, 31, 30, 29, 28, 27, 23, 22, 21, 20, 19, 17, 16};
+int set_output = 16;
+
+#define DEBUG  //Debug mesage to Serial port
+
+char c;
+byte indexs = 0;
+String masege[20]={};
+boolean reading = false; //Char Read
+boolean getInputComplete = false;
+boolean getComand = false;
+#define SerialBoud 115200 // Taxita Seriaki
+#define Delimiter '&' // Diaxoristis gia endoles {38}
+#define SubDelimiter '#' // Diaxoristis gia endoles {35}
+#define StartInput '?' // Pos Ksekinai i grami  {63}
+#define EndInput '!' // Pos tlioni i grami  {33}
+#define ID "DIO24"    // ID tis siskevis
+#define EndLiine "\r\n"//"\n\r" // 
+
+#define ONELES {int len = masege[indexs].length();masege[indexs] = masege[indexs].substring(0, len -1);} //Za Backspase i Delite 
+template<class T> inline Print &operator <<(Print &obj, T arg) { obj.print(arg); return obj; }  //Print Class <<
+
+
+#ifdef DEBUG
+  #define DEBUG_PRINTLN(x)  Serial << (x) << EndLiine;
+  #define DEBUG_PRINT(x)  Serial << (x);
+#else
+  #define DEBUG_PRINTLN(x)
+  #define DEBUG_PRINT(x)
+#endif 
+
+//*********************************************************************************
+//***************************  Comunication void **********************************
+//*********************************************************************************
+void communicationEvent() 
+{
+  while(Serial.available() > 0) 
+  {
+    c = Serial.read();
+//    Serial.println("WORKING");
+    if(c == StartInput) 
+    {
+      reading = true;
+      c = ' ';
+    }
+    if(reading)
+    {
+      getInput();
+    }
+  }
+
+}
+
+void getInput()
+{
+  switch (c) 
+  {
+    case 32 :  //  space
+    
+    break;
+    case 8 :  //  Backspace
+      ONELES;
+    break;
+    case 127 :  // Delete 
+      ONELES;
+    break;
+    case Delimiter:
+      
+      //Serial << F("Got Mesage : ") << indexs << EndLiine;
+      DEBUG_PRINT("Got Mesage : ");
+      DEBUG_PRINTLN(indexs);
+      DEBUG_PRINTLN(masege[indexs]);
+      indexs++;
+    break;
+    case EndInput :
+      reading = false;
+      getInputComplete = true;
+      //Serial << F("Got Line") << EndLiine;
+      DEBUG_PRINTLN("End Mesages");
+    break;
+      case 13 :  //  Enter
+      reading = false;
+      getInputComplete = true;
+      //Serial << F("Got Line") << EndLiine;
+      DEBUG_PRINTLN("Command Received");
+    break;
+    default:
+      
+      masege[indexs] += c;
+      
+  }
+}
+
+void prosesInput()
+{
+// #if defined USE_Smart
+  // if (masege[0] == ID)
+  // {
+  
+    //Serial << F("Got ID") << EndLiine ;
+//    DEBUG_PRINTLN("Got Liine");
+    getComand = true; 
+  // }
+  // else if (masege[0] == "731215")  //Codiko
+  // {
+    // printID();
+    // eraseInput();
+  // }
+  // else 
+  // {
+    // getComand = false;
+    // Serial << F("???") << EndLiine ;
+    // eraseInput();  //???
+  // }
+// #else  
+
+  // getComand = true;
+
+// #endif 
+   
+
+}
+
+void prosesComand()
+{
+
+  if (masege[0] == "IDN")
+  {
+    printID() ;
+  }
+  else if (masege[0] == "d")
+  {
+     for (int i = 1; i <= indexs; i++)
+    {
+      if (masege[i].startsWith("H")) // Set
+      {
+        int firstSubDelimiter = masege[i].substring(1).indexOf(SubDelimiter);
+        if(firstSubDelimiter > 0)
+        {
+          firstSubDelimiter = firstSubDelimiter + 1;
+          int pinStart = masege[i].substring(1, firstSubDelimiter).toInt() ;
+          int pinStop = masege[i].substring(firstSubDelimiter + 1).toInt() ;
+          setDOs(pinStart, pinStop, 1);       
+        }
+        else
+        {
+          int pindo = masege[i].substring(1).toInt() ;
+          DEBUG_PRINT(pindo);
+          DEBUG_PRINTLN(" > HIGH");
+          setDO (pindo , 1);
+        }
+          
+      }
+      if (masege[i].startsWith("L")) // Clear
+      {
+        int firstSubDelimiter = masege[i].substring(1).indexOf(SubDelimiter);
+        if(firstSubDelimiter > 0)
+        {
+          firstSubDelimiter = firstSubDelimiter + 1;
+          int pinStart = masege[i].substring(1, firstSubDelimiter).toInt() ;
+          int pinStop = masege[i].substring(firstSubDelimiter + 1).toInt() ;
+          setDOs(pinStart, pinStop, 0);       
+        }
+        else
+        {
+          int pindo = masege[i].substring(1).toInt() ;
+          DEBUG_PRINT(pindo);
+          DEBUG_PRINTLN(" > LOW");
+          setDO (pindo , 0);
+        }
+    
+      }
+      if (masege[i].startsWith("i")) // Invert
+      {
+        int pindo = masege[i].substring(1).toInt() ;
+        
+        DEBUG_PRINT(pindo);
+        DEBUG_PRINTLN(" > Invert");
+        invertDO (pindo );
+      }
+      if (masege[i].startsWith("r")) // Read
+      {
+        int pindo = masege[i].substring(1).toInt() ;
+        
+        readDO(pindo );
+      } 
+
+      
+    }
+    //refreshDO();    
+  }
+  else if (masege[0] == "reboot")
+  {
+    //softReset();
+  }
+
+ 
+}
+   
+void eraseInput()
+{
+  for (int i = 0; i <= indexs; i++)
+  {
+    masege[i]=""; 
+  }
+  Serial.flush();
+  
+  indexs = 0;
+  getInputComplete = false;
+  getComand = false;
+}
+
+void softReset() 
+{
+  DEBUG_PRINTLN("end ...");
+  //asm volatile ("  jmp 0");
+  
+} 
+
+void printID()
+{
+  Serial << StartInput <<F(ID) << EndInput << EndLiine ;
+
+}
+//*********************************************************************************
+//********************************** Comunication end *****************************
+//*********************************************************************************
+void setDO(int pin, bool value)
+{
+  if (pin == 0)
+  {
+    for (int i = 0 ; i <= set_output ; i++) 
+    {
+      digitalWrite(pinMap[i], value);
+    }
+  }
+  else
+  {
+    digitalWrite(pinMap[pin - 1], value);
+  }
+  
+}
+
+void setDOs(int pinStart, int pinStop, bool value)
+{
+  for (int i = pinStart ; i <= pinStop ; i++) 
+  {
+    digitalWrite(pinMap[i - 1], value);
+  }
+
+}
+
+void readDO(int pin)
+{
+
+  int actualValue;
+  
+  actualValue = digitalRead(pinMap[pin - 1]);
+
+  Serial << "Actual Value - " << actualValue << EndInput << EndLiine ;
+
+}
+
+void invertDO(int pin)
+{
+  
+  int actualValue;
+  actualValue = digitalRead(pinMap[pin - 1]);
+  digitalWrite(pinMap[pin - 1], !actualValue);
+  Serial << "Invert " << pinMap[pin - 1] << actualValue;
+}
+void setup() 
+{
+  
+
+  
+  
+  for (int i = 0 ; i <= set_output; i++)
+  {
+    pinMode(pinMap[i], OUTPUT);
+  }
+  for (int i = set_output ; i <= 32; i++)
+  {
+    pinMode(pinMap[i], INPUT);
+  }
+  
+  Serial.begin(115200); 
+  DEBUG_PRINT("Starting - ");
+  DEBUG_PRINTLN(ID);
+}
+
+
+
+
+void loop() {
+  // put your main code here, to run repeatedly:
+  communicationEvent() ;
+  if(getInputComplete) {prosesInput();if(getComand){prosesComand();}eraseInput();Serial << F("Command executed") << EndLiine;Serial << F("Enter new command: ") << EndLiine;}
+}
