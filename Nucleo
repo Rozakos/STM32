@@ -10,7 +10,7 @@ int set_output = 16;
 
 char c;
 byte indexs = 0;
-String masege[20]={};
+String message[20]={};
 boolean reading = false; //Char Read
 boolean getInputComplete = false;
 boolean getComand = false;
@@ -22,7 +22,7 @@ boolean getComand = false;
 #define ID "DIO24"    // ID tis siskevis
 #define EndLiine "\r\n"//"\n\r" // 
 
-#define ONELES {int len = masege[indexs].length();masege[indexs] = masege[indexs].substring(0, len -1);} //Za Backspase i Delite 
+#define ONELES {int len = message[indexs].length();message[indexs] = message[indexs].substring(0, len -1);} //Za Backspase i Delite 
 template<class T> inline Print &operator <<(Print &obj, T arg) { obj.print(arg); return obj; }  //Print Class <<
 
 
@@ -72,16 +72,16 @@ void getInput()
     case Delimiter:
       
       //Serial << F("Got Mesage : ") << indexs << EndLiine;
-      DEBUG_PRINT("Got Mesage : ");
+      DEBUG_PRINT("Got message : ");
       DEBUG_PRINTLN(indexs);
-      DEBUG_PRINTLN(masege[indexs]);
+      DEBUG_PRINTLN(message[indexs]);
       indexs++;
     break;
     case EndInput :
       reading = false;
       getInputComplete = true;
       //Serial << F("Got Line") << EndLiine;
-      DEBUG_PRINTLN("End Mesages");
+      DEBUG_PRINTLN("End Messages");
     break;
       case 13 :  //  Enter
       reading = false;
@@ -91,22 +91,22 @@ void getInput()
     break;
     default:
       
-      masege[indexs] += c;
+      message[indexs] += c;
       
   }
 }
 
-void prosesInput()
+void processInput()
 {
 // #if defined USE_Smart
-  // if (masege[0] == ID)
+  // if (message[0] == ID)
   // {
   
     //Serial << F("Got ID") << EndLiine ;
 //    DEBUG_PRINTLN("Got Liine");
     getComand = true; 
   // }
-  // else if (masege[0] == "731215")  //Codiko
+  // else if (message[0] == "731215")  //Codiko
   // {
     // printID();
     // eraseInput();
@@ -126,66 +126,68 @@ void prosesInput()
 
 }
 
-void prosesComand()
+void processCommand()
 {
 
-  if (masege[0] == "IDN")
+  if (message[0] == "IDN")
   {
     printID() ;
   }
-  else if (masege[0] == "d")
+  else if (message[0] == "d")
   {
      for (int i = 1; i <= indexs; i++)
     {
-      if (masege[i].startsWith("H")) // Set
+      if (message[i].startsWith("H")) // Set
       {
-        int firstSubDelimiter = masege[i].substring(1).indexOf(SubDelimiter);
+        int firstSubDelimiter = message[i].substring(1).indexOf(SubDelimiter);
         if(firstSubDelimiter > 0)
         {
           firstSubDelimiter = firstSubDelimiter + 1;
-          int pinStart = masege[i].substring(1, firstSubDelimiter).toInt() ;
-          int pinStop = masege[i].substring(firstSubDelimiter + 1).toInt() ;
+          int pinStart = message[i].substring(1, firstSubDelimiter).toInt() ;
+          int pinStop = message[i].substring(firstSubDelimiter + 1).toInt() ;
           setDOs(pinStart, pinStop, 1);       
         }
         else
         {
-          int pindo = masege[i].substring(1).toInt() ;
+          int pindo = message[i].substring(1).toInt() ;
+          DEBUG_PRINT("PIN ");
           DEBUG_PRINT(pindo);
-          DEBUG_PRINTLN(" > HIGH");
+          DEBUG_PRINTLN(" is set to HIGH");
           setDO (pindo , 1);
         }
           
       }
-      if (masege[i].startsWith("L")) // Clear
+      if (message[i].startsWith("L")) // Clear
       {
-        int firstSubDelimiter = masege[i].substring(1).indexOf(SubDelimiter);
+        int firstSubDelimiter = message[i].substring(1).indexOf(SubDelimiter);
         if(firstSubDelimiter > 0)
         {
           firstSubDelimiter = firstSubDelimiter + 1;
-          int pinStart = masege[i].substring(1, firstSubDelimiter).toInt() ;
-          int pinStop = masege[i].substring(firstSubDelimiter + 1).toInt() ;
+          int pinStart = message[i].substring(1, firstSubDelimiter).toInt() ;
+          int pinStop = message[i].substring(firstSubDelimiter + 1).toInt() ;
           setDOs(pinStart, pinStop, 0);       
         }
         else
         {
-          int pindo = masege[i].substring(1).toInt() ;
+          int pindo = message[i].substring(1).toInt() ;
+          DEBUG_PRINT("PIN ");
           DEBUG_PRINT(pindo);
-          DEBUG_PRINTLN(" > LOW");
+          DEBUG_PRINTLN(" is set to LOW");
           setDO (pindo , 0);
         }
     
       }
-      if (masege[i].startsWith("i")) // Invert
+      if (message[i].startsWith("i")) // Invert
       {
-        int pindo = masege[i].substring(1).toInt() ;
+        int pindo = message[i].substring(1).toInt() ;
         
         DEBUG_PRINT(pindo);
         DEBUG_PRINTLN(" > Invert");
         invertDO (pindo );
       }
-      if (masege[i].startsWith("r")) // Read
+      if (message[i].startsWith("r")) // Read
       {
-        int pindo = masege[i].substring(1).toInt() ;
+        int pindo = message[i].substring(1).toInt() ;
         
         readDO(pindo );
       } 
@@ -194,7 +196,7 @@ void prosesComand()
     }
     //refreshDO();    
   }
-  else if (masege[0] == "reboot")
+  else if (message[0] == "reboot")
   {
     //softReset();
   }
@@ -206,7 +208,7 @@ void eraseInput()
 {
   for (int i = 0; i <= indexs; i++)
   {
-    masege[i]=""; 
+    message[i]=""; 
   }
   Serial.flush();
   
@@ -292,6 +294,7 @@ void setup()
   Serial.begin(115200); 
   DEBUG_PRINT("Starting - ");
   DEBUG_PRINTLN(ID);
+  DEBUG_PRINT("Connection established");
 }
 
 
@@ -300,5 +303,5 @@ void setup()
 void loop() {
   // put your main code here, to run repeatedly:
   communicationEvent() ;
-  if(getInputComplete) {prosesInput();if(getComand){prosesComand();}eraseInput();Serial << F("Command executed") << EndLiine;Serial << F("Enter new command: ") << EndLiine;}
+  if(getInputComplete) {processInput();if(getComand){processCommand();}eraseInput();Serial << F("Command executed") << EndLiine;Serial << F("Enter new command: ") << EndLiine;}
 }
