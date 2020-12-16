@@ -223,7 +223,6 @@ void processCommand()
     test_Func();
   }
 
- 
 }
    
 void eraseInput()
@@ -337,5 +336,5 @@ void setup()
 void loop() {
   // put your main code here, to run repeatedly:
   communicationEvent() ;
-  if(getInputComplete) {processInput();if(getCommand){processCommand();}eraseInput();Serial << F("Command executed") << EndLiine;Serial << F("Enter new command: ") << EndLiine;}
+  if(getInputComplete) {processInput();if(getCommand){processCommand();}eraseInput();Serial << F("Enter new command: ") << EndLiine;}
 }
