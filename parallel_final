@@ -183,7 +183,7 @@ void processCommand()
         }
     
       }
-      if (message[i].startsWith("i")) // Invert
+      if (message[i].startsWith("I")) // Invert
       {
  
     int firstSubDelimiter = message[i].substring(1).indexOf(SubDelimiter);
@@ -207,7 +207,7 @@ void processCommand()
     
     
       }
-      if (message[i].startsWith("r")) // Read
+      if (message[i].startsWith("R")) // Read
       {
         int pindo = message[i].substring(1).toInt() ;
         
