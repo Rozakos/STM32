@@ -1,0 +1,341 @@
+//  1  2  3  4  5  6  7  8  9   10  11  12  13  14  15  16  17  18  19  20  21  22  23  24  25  26  27  28  29  30  31  32  33  34  35  36  37  38  39  40  41  42  43  44
+// {2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 45, 44, 43, 42, 41, 40, 38, 37, 36, 35, 34, 33, 51, 50, 49, 48, 47, 46, 31, 30, 29, 28, 27, 23, 22, 21, 20, 19, 17, 16};
+
+int numbers_output = 16;
+int pin_numbers = 32;
+
+#define DEBUG  //Debug mesage to Serial port
+
+//int pinMap[32] = {37, 2, 8, 7, 51, 33, 9, 34, 49, 35, 45, 11, 12, 13, 4, 10, 42, 43, 44, 38, 50, 6, 40, 41};
+//int pinMap[32] = {2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 45, 44, 43, 42, 41, 40};
+
+//byte pinMap[32] = {PA_11,PA_10,PA_9,PA_8,PC_9,PC_8,PC_7,PC_6,PB_0,PC_5,PC_4,PA_7,PA_6,PA_5,PB_5,PB_6,PB_15,PB_14,PB_13,PB_12,PB_11,PB_10,PB_2,PB_1};
+byte pinMap[32] = {PA_11,PA_10,PA_9,PA_8,PC_9,PC_7,PC_6,PC_5,PB_0,PC_4,PC_3,PA_7,PA_6,PA_5,PB_5,PB_6,PB_14,PB_13,PB_12,PB_11,PB_15,PB_10,PB_2,PB_1};
+                 // 1      2     3    4   5     6    7    8    9   10   11   12   13   14   15   16   17    18    19    20    21    22    23   24  25  26  27  28  29  30  31  32  33  34  35  36  37  38  39  40  41  42  43  44
+
+
+//byte pinMap[32] = {PC_13, PC_14, PC_15, PH_0, PH_1, PC_0, PC_1, PC_2, PC_3, PB_8, PB_9, PB_7, PD_2, PC_12, PC_11, PC_10,PB_14,PB_13,PB_12,PB_11,PB_15,PB_10,PB_2,PB_1};
+
+char c;
+byte indexs = 0;
+String message[20]={};
+boolean reading = false; //Char Read
+boolean getInputComplete = false;
+boolean getCommand = false;
+#define SerialBoud 115200 // Taxita Seriaki
+#define Delimiter '&' // Diaxoristis gia endoles {38}
+#define SubDelimiter '#' // Diaxoristis gia endoles {35}
+#define StartInput '?' // Pos Ksekinai i grami  {63}
+#define EndInput '!' // Pos tlioni i grami  {33}
+#define ID "DIO24"    // ID tis siskevis
+#define EndLiine "\r\n"//"\n\r" // 
+
+#define oneLess {int len = message[indexs].length();message[indexs] = message[indexs].substring(0, len -1);} //Za Backspase i Delite 
+template<class T> inline Print &operator <<(Print &obj, T arg) { obj.print(arg); return obj; }  //Print Class <<
+
+
+#ifdef DEBUG
+  #define DEBUG_PRINTLN(x)  Serial << (x) << EndLiine;
+  #define DEBUG_PRINT(x)  Serial << (x);
+#else
+  #define DEBUG_PRINTLN(x)
+  #define DEBUG_PRINT(x)
+#endif 
+
+//*********************************************************************************
+//***************************  Comunication void **********************************
+//*********************************************************************************
+void communicationEvent() 
+{
+  while(Serial.available() > 0) 
+  {
+    c = Serial.read();
+//    Serial.println("WORKING");
+    if(c == StartInput) 
+    {
+      reading = true;
+      c = ' ';
+    }
+    if(reading)
+    {
+      getInput();
+    }
+  }
+
+}
+
+void getInput()
+{
+  switch (c) 
+  {
+    case 32 :  //  space
+    
+    break;
+    case 8 :  //  Backspace
+      oneLess;
+    break;
+    case 127 :  // Delete 
+      oneLess;
+    break;
+    case Delimiter:
+      
+      //Serial << F("Got Message : ") << indexs << EndLiine;
+//      DEBUG_PRINT("Got Message : ");
+//      DEBUG_PRINTLN(indexs);
+//      DEBUG_PRINTLN(message[indexs]);
+      indexs++;
+    break;
+    case EndInput :
+      reading = false;
+      getInputComplete = true;
+//      DEBUG_PRINTLN("End Messages");
+    break;
+      case 13 :  //  Enter
+      reading = false;
+      getInputComplete = true;
+      DEBUG_PRINTLN("Command Received");
+    break;
+    default:
+      
+      message[indexs] += c;
+      
+  }
+}
+
+void processInput()
+{
+// #if defined USE_Smart
+  // if (message[0] == ID)
+  // {
+  
+    //Serial << F("Got ID") << EndLiine ;
+//    DEBUG_PRINTLN("Got Liine");
+    getCommand = true; 
+  // }
+  // else if (message[0] == "***")  //Codiko
+  // {
+    // printID();
+    // eraseInput();
+  // }
+  // else 
+  // {
+    // getCommand = false;
+    // Serial << F("???") << EndLiine ;
+    // eraseInput();  //???
+  // }
+// #else  
+
+  // getCommand = true;
+
+// #endif 
+   
+
+}
+
+void processCommand()
+{
+
+  if (message[0] == "IDN")
+  {
+    printID() ;
+  }
+  else if (message[0] == "d")
+  {
+     for (int i = 1; i <= indexs; i++)
+    {
+      if (message[i].startsWith("H")) // Set
+      {
+        int firstSubDelimiter = message[i].substring(1).indexOf(SubDelimiter);
+        if(firstSubDelimiter > 0)
+        {
+          firstSubDelimiter = firstSubDelimiter + 1;
+          int pinStart = message[i].substring(1, firstSubDelimiter).toInt() ;
+          int pinStop = message[i].substring(firstSubDelimiter + 1).toInt() ;
+          setDOs(pinStart, pinStop, 1);       
+        }
+        else
+        {
+          int pindo = message[i].substring(1).toInt() ;
+          DEBUG_PRINT("PIN ");
+          DEBUG_PRINT(pindo);
+          DEBUG_PRINTLN(" is set to HIGH");
+          setDO (pindo , 1);
+        }
+          
+      }
+      if (message[i].startsWith("L")) // Clear
+      {
+        int firstSubDelimiter = message[i].substring(1).indexOf(SubDelimiter);
+        if(firstSubDelimiter > 0)
+        {
+          firstSubDelimiter = firstSubDelimiter + 1;
+          int pinStart = message[i].substring(1, firstSubDelimiter).toInt() ;
+          int pinStop = message[i].substring(firstSubDelimiter + 1).toInt() ;
+          setDOs(pinStart, pinStop, 0);       
+        }
+        else
+        {
+          int pindo = message[i].substring(1).toInt() ;
+          DEBUG_PRINT("PIN ");
+          DEBUG_PRINT(pindo);
+          DEBUG_PRINTLN(" is set to LOW");
+          setDO (pindo , 0);
+        }
+    
+      }
+      if (message[i].startsWith("i")) // Invert
+      {
+ 
+    int firstSubDelimiter = message[i].substring(1).indexOf(SubDelimiter);
+        if(firstSubDelimiter > 0)
+        {
+          firstSubDelimiter = firstSubDelimiter + 1;
+          int pinStart = message[i].substring(1, firstSubDelimiter).toInt() ;
+          int pinStop = message[i].substring(firstSubDelimiter + 1).toInt() ;
+          invertDOs(pinStart, pinStop);       
+        }
+        else
+        {
+      int pindo = message[i].substring(1).toInt() ;
+          DEBUG_PRINT("PIN ");
+          DEBUG_PRINT(pindo);
+          DEBUG_PRINTLN(" is INVERTED");
+      invertDO (pindo );
+      
+        }
+    
+    
+    
+      }
+      if (message[i].startsWith("r")) // Read
+      {
+        int pindo = message[i].substring(1).toInt() ;
+        
+        readDO(pindo );
+      } 
+
+      
+    }
+    
+  }
+  else if (message[0] == "Test")
+  {
+    test_Func();
+  }
+
+ 
+}
+   
+void eraseInput()
+{
+  for (int i = 0; i <= indexs; i++)
+  {
+    message[i]=""; 
+  }
+  Serial.flush();
+  
+  indexs = 0;
+  getInputComplete = false;
+  getCommand = false;
+}
+
+void test_Func()
+{
+  DEBUG_PRINTLN("Test Function");
+  
+} 
+
+void printID()
+{
+  Serial << StartInput <<F(ID) << EndInput << EndLiine ;
+
+}
+//*********************************************************************************
+//********************************** Comunication end *****************************
+//*********************************************************************************
+void setDO(int pin, bool value)  //Set Pin All or Alone
+{
+  if (pin == 0)
+  {
+    for (int i = 0 ; i <= numbers_output ; i++) 
+    {
+      digitalWrite(pinMap[i], value);
+    }
+  }
+  else
+  {
+    digitalWrite(pinMap[pin - 1], value);
+  }
+  
+}
+
+void setDOs(int pinStart, int pinStop, bool value)  //Set reange off Pins
+{
+  for (int i = pinStart ; i <= pinStop ; i++) 
+  {
+    digitalWrite(pinMap[i - 1], value);
+  }
+
+}
+
+void readDO(int pin)  //Read Pin
+{
+
+  int actualValue;  
+  actualValue = digitalRead(pinMap[pin - 1]);
+  Serial << "Actual Value - " << actualValue << EndInput << EndLiine ;
+
+}
+
+void invertDO(int pin) //Invert Pin
+{ 
+  int actualValue;
+  actualValue = digitalRead(pinMap[pin - 1]);
+  digitalWrite(pinMap[pin - 1], !actualValue);  
+}
+
+void invertDOs(int pinStart,int pinStop)// Invert Pins
+{ 
+  int actualValue;
+  for (int i = pinStart ; i <= pinStop ; i++) 
+  {
+    actualValue = digitalRead(pinMap[i - 1]);
+    digitalWrite(pinMap[i - 1], !actualValue);
+  }
+
+}
+
+
+void setup() 
+{
+  
+
+  
+  
+  for (int i = 0 ; i <= numbers_output; i++)
+  {
+    pinMode(pinMap[i], OUTPUT);
+  }
+  for (int i = numbers_output ; i <= 32; i++)
+  {
+    pinMode(pinMap[i], INPUT);
+  }
+  
+  Serial.begin(115200); 
+  DEBUG_PRINT("Starting  ");
+  DEBUG_PRINT(ID);
+  DEBUG_PRINTLN("...");
+  DEBUG_PRINTLN("Enter command: ");
+
+  
+  
+}
+
+
+
+
+void loop() {
+  // put your main code here, to run repeatedly:
+  communicationEvent() ;
+  if(getInputComplete) {processInput();if(getCommand){processCommand();}eraseInput();Serial << F("Command executed") << EndLiine;Serial << F("Enter new command: ") << EndLiine;}
+}
