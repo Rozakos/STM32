@@ -22,11 +22,11 @@ String message[20]={};
 boolean reading = false; //Char Read
 boolean getInputComplete = false;
 boolean getCommand = false;
-#define SerialBaud 115200 // Taxita Seriaki
+#define SerialBaud 115200 // serial speed
 #define Delimiter '&' // Command subdelimiter {38}
 #define SubDelimiter '#' // Command subdelimiter {35}
 #define StartInput '?' // Command start  {63}
-#define EndInput '!' // Pos tlioni i grami  {33}
+#define EndInput '!' // End of command  {33}
 #define ID "DIO24"    // ID of the device
 #define EndLiine "\r\n"//"\n\r" // 
 
@@ -224,6 +224,7 @@ void processCommand()
   }
 
 }
+
    
 void eraseInput()
 {
