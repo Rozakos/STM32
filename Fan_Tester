@@ -28,6 +28,7 @@ void setup() {
 
 void loop() {
   // read the state of the pushbutton value:
+  digitalWrite(button_voltage, HIGH);
   buttonState = digitalRead(buttonPin);
 
   // check if the pushbutton is pressed. If it is, the buttonState is HIGH:
