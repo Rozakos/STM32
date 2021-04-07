@@ -1,0 +1,154 @@
+#include <Arduino.h>
+
+char receivedChar;
+String serBuffer;
+String first_prompt = "omnibas login:";
+String first_prompt_1 = "OmniBAS login:";
+String first_prompt_2 = "Username:";
+String username = "admin";
+String password = "admin";
+boolean admin_status = 0;
+
+void setup()
+{
+  // Open serial communications and wait for port to open:
+  Serial.begin(115200);
+  //  Serial.println("Serial Works!");
+
+  // set the data rate for the SoftwareSerial port
+  Serial2.begin(115200);
+  //  Serial2.println("diag");
+  Serial2.println(' ');
+}
+
+void winmon_login()
+{
+
+  if (Serial2.available() > 0)
+  {
+    receivedChar = Serial2.read();
+    if (receivedChar == '\r')
+    {
+      receivedChar = ' ';
+    }
+
+    if (receivedChar == '\n')
+    {
+      serBuffer = serBuffer + '\n';
+
+      if (serBuffer == "Username:")
+      {
+        Serial2.println("admin");
+      }
+
+      else if (serBuffer == "Executing boot command. Hit CTRL-C to abort\n")
+      {
+        Serial2.write("\x03");
+      }
+
+      Serial.print(serBuffer);
+      serBuffer = "";
+    }
+
+    else
+    {
+      serBuffer += receivedChar;
+      if (serBuffer == "WinMon>")
+      {
+        // Serial2.println("diag");
+        Serial.println("WINMON REACHED");
+      }
+    }
+  }
+}
+
+void serBuffer_routine()
+{
+  if (Serial2.available() > 0)
+  {
+    receivedChar = Serial2.read();
+    if (receivedChar == '\r')
+    {
+      receivedChar = ' ';
+    }
+
+    if (receivedChar == '\n') //|| (receivedChar == '\r'))
+    {
+
+      Serial.println(serBuffer);
+    }
+    else
+    {
+      serBuffer += receivedChar;
+    }
+  }
+}
+
+void admin_login()
+{
+  while (admin_status == 0)
+  {
+    if (Serial2.available() > 0)
+    {
+      receivedChar = Serial2.read();
+      if (receivedChar == '\r')
+      {
+        receivedChar = ' ';
+      }
+
+      if (receivedChar == '\n') //|| (receivedChar == '\r'))
+      {
+
+        Serial.println(serBuffer);
+        serBuffer = " ";
+      }
+      else
+      {
+        serBuffer += receivedChar;
+
+        // if ((serBuffer == first_prompt) || (serBuffer == first_prompt_1) || (serBuffer == first_prompt_2))
+        if (serBuffer.endsWith("in:"))
+        {
+          Serial.println("*****");
+          delay(15000);
+          Serial2.println(username);
+          delay(1000);
+          Serial.println("*****");
+          Serial2.println(password);
+          admin_status = 1;
+        }
+      }
+    }
+  }
+}
+
+void hwid_test()
+{
+  if (admin_status == 0)
+  {
+    // Serial.println("LOGGING IN");
+    admin_login();
+  }
+  else
+  {
+    // Serial.println("ALREADY IN");
+    Serial2.println("!!shell sudo wf_test g_sig 61");
+    serBuffer_routine();
+    if (serBuffer.endsWith("0x7"))
+    {
+      Serial.println("PASS");
+    }
+  }
+}
+
+void loop()
+{ // run over and over
+  //  if (Serial2.available()) {
+  //    Serial.write(Serial2.read());
+  hwid_test();
+
+  if (Serial.available())
+  {
+    Serial2.write(Serial.read());
+  }
+}
