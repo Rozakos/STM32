@@ -89,16 +89,16 @@ void fans_off() {
 
 void button_read()
 {
-  int reading = digitalRead(buttonPin);
+  int reading = digitalRead(buttonPin); //kanoyme sunexeia read tou pin
   //  Serial.print("Reading: ");
   //  Serial.println(reading);
 
 
-
-  if (reading != lastButtonState)
+  if (reading != lastButtonState) // lastButtonState πρώτη κατάσταση είναι 0, το έχουμε ορίσει παραπάνω
   {
 
-    if ((millis() - lastDebounceTime) > debounceDelay) {
+    if ((millis() - lastDebounceTime) > debounceDelay) 
+    {
 
       //        Serial.println("LAST > NOW");
       buttonState = !buttonState;
@@ -131,12 +131,9 @@ void button_read()
 
 
 
-
-
-void loop() {
-  button_read();
-
-   if (millis() - passed_time > measure_time)
+void rpm_read()
+{
+  if (millis() - passed_time > measure_time)
    {
       fan1_pwm = fan_period * 60;
       Serial.print("PWM : ");
@@ -157,5 +154,12 @@ void loop() {
   
     fan_period = (pulse_high_fan1 + pulse_low_fan1) * 2;
 
+}
+
+void loop() {
+  button_read();
+  rpm_read();
+
+   
 
 }
