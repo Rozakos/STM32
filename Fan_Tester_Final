@@ -27,7 +27,7 @@ const int button_voltage =  PC_5; //pin 9
 
 
 unsigned long lastDebounceTime = 0;  // the last time the output pin was toggled
-unsigned long debounceDelay = 1;
+unsigned long debounceDelay = 70;
 
 
 
@@ -103,7 +103,7 @@ void setup() {
   leds_off();
 
   pinMode(indicator_led, OUTPUT);
-//  led_blink(PA_10, 10);
+  //  led_blink(PA_10, 10);
 }
 
 
@@ -122,7 +122,6 @@ int fan_period(int n)
 
 void rpm_comparison( )
 {
-  fan_sequence_pwm(150);
   fan1_rpm = fan_period(fan_pwm[0]);
   fan2_rpm = fan_period(fan_pwm[1]);
   fan3_rpm = fan_period(fan_pwm[2]);
@@ -130,20 +129,36 @@ void rpm_comparison( )
   Serial.println(fan1_rpm);
   if (fan1_rpm == 0)
   {
+    digitalWrite(output_led[0], HIGH);
+  }
+  if (fan1_rpm != 0)
+  {
     digitalWrite(output_led[0], LOW);
   }
   Serial.println(fan2_rpm);
   if (fan2_rpm == 0)
+  {
+    digitalWrite(output_led[1], HIGH);
+  }
+  if (fan2_rpm != 0)
   {
     digitalWrite(output_led[1], LOW);
   }
   Serial.println(fan3_rpm);
   if (fan3_rpm == 0)
   {
+    digitalWrite(output_led[2], HIGH);
+  }
+  if (fan3_rpm != 0)
+  {
     digitalWrite(output_led[2], LOW);
   }
   Serial.println(fan4_rpm);
   if (fan4_rpm == 0)
+  {
+    digitalWrite(output_led[3], HIGH);
+  }
+  if (fan4_rpm != 0)
   {
     digitalWrite(output_led[3], LOW);
   }
@@ -166,11 +181,15 @@ void button_read()
   int reading = digitalRead(buttonPin); //kanoyme sunexeia read tou pin
   //  Serial.print("Reading: ");
   //  Serial.println(reading);
+
+
   if (reading != lastButtonState) // lastButtonState πρώτη κατάσταση είναι 0, το έχουμε ορίσει παραπάνω
   {
 
     if ((millis() - lastDebounceTime) > debounceDelay)
     {
+
+      //        Serial.println("LAST > NOW");
       buttonState = !buttonState;
       lastDebounceTime = millis();
       Serial.println(buttonState);
@@ -179,22 +198,30 @@ void button_read()
       Serial.print("Button State : ");
       Serial.println(tester_state);
       // only toggle the LED if the new button state is HIGH
-      if (buttonState == 1) 
-      {
+      if (buttonState == 1) {
         tester_state = !tester_state;
         Serial.print("Tester State: ");
         Serial.println(tester_state);
       }
       if (tester_state == 1)
       {
-//        rpm_comparison();
-        Serial.println("COMPARISON FINISHED");
+
+
+        fan_sequence_pwm(255);
+        delay(5000);
+        fan_sequence_pwm(100);
+
+
+
       }
       else
       {
-       fan_sequence_pwm(0);
-       leds_off();
+        fan_sequence_pwm(0);
+        test_already_run = 0;
+        leds_off();
       }
+
+
     }
     lastButtonState = reading;
   }
@@ -215,8 +242,10 @@ void fan_sequence_pwm(int duty_cycle)
 
 
 
-void loop() 
+void loop()
 {
   // put your main code here, to run repeatedly:
   button_read();
+  rpm_comparison();
 }
+
